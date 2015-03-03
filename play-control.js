@@ -6,7 +6,6 @@
 'use strict';var PRS$0 = (function(o,t){o["__proto__"]={"a":t};return o["a"]===t})({},{});var DP$0 = Object.defineProperty;var GOPD$0 = Object.getOwnPropertyDescriptor;var MIXIN$0 = function(t,s){for(var p in s){if(s.hasOwnProperty(p)){DP$0(t,p,GOPD$0(s,p));}}return t};var SP$0 = Object.setPrototypeOf||function(o,p){if(PRS$0){o["__proto__"]=p;}else {DP$0(o,"__proto__",{"value":p,"configurable":true,"enumerable":false,"writable":true});}return o};var OC$0 = Object.create;
 
 var TimeEngine = require("time-engine");
-var scheduler = require("scheduler");
 
 var PlayControlSchedulerHook = (function(super$0){if(!PRS$0)MIXIN$0(PlayControlSchedulerHook, super$0);var proto$0={};
   function PlayControlSchedulerHook(playControl) {
@@ -50,6 +49,10 @@ MIXIN$0(PlayControlLoopControl.prototype,proto$0);proto$0=void 0;return PlayCont
 var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var proto$0={};
   function PlayControl(engine) {var this$0 = this;
     super$0.call(this);
+
+    // future assignment
+    // this.scheduler = waves.getScheduler(engine.audioContext);
+    this.scheduler = require("scheduler");
 
     this.__engine = null;
     this.__interface = null;
@@ -95,7 +98,7 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
       engine.setTransported(this, 0, function()  {var nextEnginePosition = arguments[0];if(nextEnginePosition === void 0)nextEnginePosition = null;
         // resetNextPosition
         if (nextEnginePosition === null) {
-          var time = scheduler.currentTime;
+          var time = this$0.scheduler.currentTime;
           var position = this$0.__getPositionAtTime(time);
           nextEnginePosition = engine.syncPosition(time, position, this$0.__speed);
         }
@@ -107,7 +110,7 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
       this.__engine = engine;
       this.__interface = "scheduled";
 
-      scheduler.add(engine, Infinity, getCurrentPosition);
+      this.scheduler.add(engine, Infinity, getCurrentPosition);
     } else {
       throw new Error("object cannot be added to play control");
     }
@@ -156,7 +159,7 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
    * This function will be replaced when the play-control is added to a master.
    */
   function $currentTime_get$0() {
-    return scheduler.currentTime;
+    return this.scheduler.currentTime;
   }
 
   /**
@@ -166,17 +169,17 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
    * This function will be replaced when the play-control is added to a master.
    */
   function $currentPosition_get$0() {
-    return this.__position + (scheduler.currentTime - this.__time) * this.__speed;
+    return this.__position + (this.scheduler.currentTime - this.__time) * this.__speed;
   }
 
   function $loop_set$0(enable) {
     if (enable) {
       if (this.__loopStart > -Infinity && this.__loopEnd < Infinity) {
         this.__loopControl = new PlayControlLoopControl(this);
-        scheduler.add(this.__loopControl, Infinity);
+        this.scheduler.add(this.__loopControl, Infinity);
       }
     } else if (this.__loopControl) {
-      scheduler.remove(this.__loopControl);
+      this.scheduler.remove(this.__loopControl);
       this.__loopControl = null;
     }
   }
@@ -228,12 +231,12 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
     if (this.__loopControl) {
       if (speed > 0) {
         this.__loopControl.speed = speed;
-        scheduler.reset(this.__loopControl, this.__getTimeAtPosition(this.__loopEnd));
+        this.scheduler.reset(this.__loopControl, this.__getTimeAtPosition(this.__loopEnd));
       } else if (speed < 0) {
         this.__loopControl.speed = speed;
-        scheduler.reset(this.__loopControl, this.__getTimeAtPosition(this.__loopStart));
+        this.scheduler.reset(this.__loopControl, this.__getTimeAtPosition(this.__loopStart));
       } else {
-        scheduler.reset(this.__loopControl, Infinity);
+        this.scheduler.reset(this.__loopControl, Infinity);
       }
     }
   };
@@ -266,7 +269,7 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
 
             // add scheduler hook to scheduler (will be rescheduled to appropriate time below)
             this.__schedulerHook = new PlayControlSchedulerHook(this);
-            scheduler.add(this.__schedulerHook, Infinity);
+            this.scheduler.add(this.__schedulerHook, Infinity);
           } else if (speed === 0) {
             // stop
             nextPosition = Infinity;
@@ -275,7 +278,7 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
               this.__engine.syncSpeed(time, position, 0);
 
             // remove scheduler hook from scheduler            
-            scheduler.remove(this.__schedulerHook);
+            this.scheduler.remove(this.__schedulerHook);
             this.__schedulerHook = null;
           } else if (speed * lastSpeed < 0) { // change transport direction
             nextPosition = this.__engine.syncPosition(time, position, speed);
