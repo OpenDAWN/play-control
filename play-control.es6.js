@@ -50,8 +50,6 @@ class PlayControl extends TimeEngine {
   constructor(engine) {
     super();
 
-    // future assignment
-    // this.scheduler = waves.getScheduler(engine.audioContext);
     this.scheduler = require("scheduler");
 
     this.__engine = null;

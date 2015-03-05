@@ -50,8 +50,6 @@ var PlayControl = (function(super$0){if(!PRS$0)MIXIN$0(PlayControl, super$0);var
   function PlayControl(engine) {var this$0 = this;
     super$0.call(this);
 
-    // future assignment
-    // this.scheduler = waves.getScheduler(engine.audioContext);
     this.scheduler = require("scheduler");
 
     this.__engine = null;
